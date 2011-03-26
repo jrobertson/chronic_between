@@ -2,6 +2,9 @@
 
 # file: chronic_between.rb
 
+require 'chronic'
+require 'date'
+
 class ChronicBetween
 
   def initialize(s)
@@ -24,7 +27,7 @@ class ChronicBetween
 
         d1, d2, rt1, rt2 = raw1.captures
         date_ranges << [[d1,rt1], [d2,rt2]].map do |d,r| 
-          cdate = Chronic.parse(d, :now => (date - 1)
+          cdate = Chronic.parse(d, :now => (date - 1))
           DateTime.parse(cdate).strftime("%d-%b-%y") + ' ' + r)
         end
 

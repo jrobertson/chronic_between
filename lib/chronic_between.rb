@@ -17,7 +17,7 @@ class ChronicBetween
     @app = AppRoutes.new(params)
     ranges(params, date)    
     build_range date
-    
+    puts 'dates : ' + @date_ranges.inspect
     d = @date_ranges.detect do |d1, d2|
       date.between? d1, d2
     end
@@ -31,14 +31,16 @@ class ChronicBetween
     @app.routes do
 
       # e.g. Mon-Fri 9:00-16:30
-      get %r{(\w+)-(\w+)\s+([^-]+)-(.*)} do 
+      get %r{(\w+)-(\w+)\s+(\d+:\d+)-(\d+:\d+)$} do 
         
-        d1, d2, rt1, rt2 = params[:captures]
-
-        @date_ranges << [[d1,rt1], [d2,rt2]].map do |d,r| 
-          cdate = Chronic.parse(d, :now => (date - 1))
-          DateTime.parse(cdate.strftime("%d-%b-%y") + ' ' + r)
-        end
+        d1, d2, t1, t2 = params[:captures]
+        cdate1, cdate2 = [d1,d2].map {|d| Chronic.parse(d)}
+        n_days = (cdate2 - cdate1) / 86400
+        
+        0.upto(n_days.to_i).each do |n|          
+          x = (cdate1.to_date + n).strftime("%d-%b-%y ")
+          @date_ranges << [DateTime.parse(x + t1), DateTime.parse(x + t2)]
+        end        
 
       end
 
@@ -52,9 +54,16 @@ class ChronicBetween
       end
 
       # e.g. 3:45-5:15
-      get %r{(\d+:\d+)-(\d+:\d+)} do
+      get %r{^(\d+:\d+)-(\d+:\d+)$} do
         t1, t2 = params[:captures]        
         @date_ranges << [t1,t2].map {|t| DateTime.parse(t)}
+      end
+
+      # e.g. Mon 3:45-5:15
+      get %r{^(\w+)\s+(\d+:\d+)-(\d+:\d+)$} do                                                    
+        d, t1, t2 = params[:captures]        
+        x = Chronic.parse(d, :now => (date - 1)).strftime("%d-%b-%y ")
+        @date_ranges << [DateTime.parse(x + t1), DateTime.parse(x + t2)]
       end
 
     end

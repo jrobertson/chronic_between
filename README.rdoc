@@ -38,3 +38,4 @@ Examples of parse-able strings:
 * 'Mon-Fri 9:00-16:30, Saturday, Sunday'
 * 'Mon-Fri 9:00-16:30, Saturday, 10:15-10:45'
 * 'Sat 18:15-21:40'
+* 'Mon-Wed'

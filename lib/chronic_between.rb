@@ -4,29 +4,29 @@
 
 require 'chronic'
 require 'date'
+require 'app-routes'
 
 class ChronicBetween
 
   def initialize(s)
     @s = s
-    @date_ranges = []
   end
   
   def within?(date)
-    params = {}
+    
+    params = {};  @date_ranges = []    
     @app = AppRoutes.new(params)
-    ranges(params, date)    
-    build_range date
-    puts 'dates : ' + @date_ranges.inspect
-    d = @date_ranges.detect do |d1, d2|
-      date.between? d1, d2
-    end
+    
+    set_ranges(params, date)
+    @s.split(',').each {|x| @app.run(x.strip)}
+    d = @date_ranges.detect {|d1, d2| date.between? d1, d2}
+
     d ? true : false
   end  
   
   private
   
-  def ranges(params, date)
+  def set_ranges(params, date)
 
     @app.routes do
 
@@ -66,6 +66,16 @@ class ChronicBetween
         @date_ranges << [DateTime.parse(x + t1), DateTime.parse(x + t2)]
       end
 
+      # e.g. Mon-Wed
+      get %r{^(\w+)-(\w+)$} do                                                    
+        d1, d2 = params[:captures]        
+        cdate1, cdate2 = [d1,d2].map {|d| Chronic.parse(d)}
+        n_days = (cdate2 - cdate1) / 86400
+        
+        date = DateTime.parse(cdate1.strftime("%d-%b-%y") + ' 00:00')
+        @date_ranges << [date, date + n_days.to_i]
+      end
+
     end
 
   end
@@ -73,11 +83,5 @@ class ChronicBetween
   def get(arg,&block)
     @app.get(arg, &block)
   end      
-
-  def build_range(date)
-    # parse the days
-    raw_days = @s.split(',')
-    raw_days.each {|d| @app.run(d.strip)}
-  end
 
 end

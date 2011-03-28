@@ -19,9 +19,7 @@ class ChronicBetween
     
     set_ranges(params, date)
     @s.split(',').each {|x| @app.run(x.strip)}
-    d = @date_ranges.detect {|d1, d2| date.between? d1, d2}
-
-    d ? true : false
+    @date_ranges.any? {|d1, d2| date.between? d1, d2}
   end  
   
   private

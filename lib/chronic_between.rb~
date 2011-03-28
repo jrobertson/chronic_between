@@ -4,6 +4,7 @@
 
 require 'chronic'
 require 'date'
+require 'app-routes'
 
 class ChronicBetween
 

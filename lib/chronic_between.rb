@@ -6,12 +6,13 @@ require 'chronic'
 require 'date'
 require 'app-routes'
 
+
 class ChronicBetween
   include AppRoutes
   
   def initialize(x)    
     
-    @times = x.is_a?(String) ? x.split(/[,;&]/) : x
+    @times = x.is_a?(String) ? x.split(/[,;&]/).map(&:strip) : x
     @route = {}; @params = {}
   end
     
@@ -20,16 +21,27 @@ class ChronicBetween
     dates = []
     
     ranges(@params, date)
+    
     negatives = '(not|except)\s+'
     times, closed_times = @times.partition {|x| !x[/^#{negatives}/]}
     closed_times.map!{|x| x[/^#{negatives}(.*)/,2]}
     
     dates = build times
-    positive_flag = dates.any? {|d1, d2| date.between? d1, d2}    
-    neg_dates = build closed_times
-    negative_flag = neg_dates.any? {|d1, d2| date.between? d1, d2}
+    inside_range = dates.detect {|d1, d2| date.between? d1, d2}    
     
-    positive_flag and not negative_flag
+    neg_dates = build closed_times
+    inside_restrictions = neg_dates.detect {|d1, d2| date.between? d1, d2}
+
+    if inside_restrictions then
+      return false 
+    elsif closed_times.any? and times.empty? then
+      return true
+    elsif inside_range then
+      return true
+    else
+      return false
+    end
+    
   end
     
   private
@@ -69,39 +81,39 @@ class ChronicBetween
     end
 
     # e.g. 3:45-5:15
-    get %r{^(\d[\w:]*)-(\d[\w:]*)(?=\s+(daily|every day))} do
+    get %r{^(\d[\w:]*)-(\d[\w:]*)(?=\s+(daily|every day))?} do
       t1, t2 = params[:captures]        
-      time_range(t1, t2)
+      time_range(date, t1, t2)
     end
     
     # e.g. 3:45 to 5:15
-    get %r{^(\d[\w:]*)\s+to\s+(\d[\w:]*)(?=\s+(daily|every day))} do
+    get %r{^(\d[\w:]*)\s+to\s+(\d[\w:]*)(?=\s+(daily|every day))?} do
       t1, t2 = params[:captures]        
-      time_range(t1, t2)
+      time_range(date, t1, t2)
     end    
 
     # e.g. Mon 3:45-5:15
     get %r{^(\w+)\s+(\d[\w:]*)-(\d[\w:]*)$} do                                                    
       d1, t1, t2 = params[:captures]        
-      date_with_time_range(date, d1, t1, t2)
+      cdatetime_range(date, d1, t1, t2)
     end
     
     # e.g. Mon 3:45 to 5:15
     get %r{^(\w+)\s+(\d[\w:]*)\s+to\s+(\d[\w:]*)$} do                                                    
       d1, t1, t2 = params[:captures]        
-      date_with_time_range(date, d1, t1, t2)
+      cdatetime_range(date, d1, t1, t2)
     end    
     
     # e.g. 3:45-5:15 Mon
     get %r{^(\d[\w:]*)-(\d[\w:]*)\s+(\w+)$} do                                                    
       t1, t2, d1 = params[:captures]        
-      date_with_time_range(date, d1, t1, t2)
+      cdatetime_range(date, d1, t1, t2)
     end
     
     # e.g. 3:45 to 5:15 Mon 
     get %r{^(\d[\w:]*)\s+to\s+(\d[\w:]*)\s+(\w+)$} do                                                    
       t1, t2, d1 = params[:captures]        
-      date_with_time_range(date, d1, t1, t2)
+      cdatetime_range(date, d1, t1, t2)
     end        
 
     # e.g. Mon-Wed
@@ -116,16 +128,16 @@ class ChronicBetween
     # e.g. after 6pm
     get %r{^after\s+(\d[\w:]*)$} do                                                    
       t1 = params[:captures].first
-      date1 = Chronic.parse(t1).to_datetime
-      date2 = DateTime.parse(date1.strftime("%d-%b-%y") + ' 00:00') + 1
+      date1 = DateTime.parse(date.strftime("%d-%b-%y ") + t1)
+      date2 = DateTime.parse((date + 1).strftime("%d-%b-%y ") + '00:00')      
       [date1, date2]
     end            
 
     # e.g. before 9pm
     get %r{^before\s+(\d[\w:]*)$} do                                                    
       t1 = params[:captures].first
-      date2 = Chronic.parse(t1).to_datetime
-      date1 = DateTime.parse(date2.strftime("%d-%b-%y") + ' 00:00') - 1
+      date2 = DateTime.parse(date.strftime("%d-%b-%y ") + t1)
+      date1 = DateTime.parse(date.strftime("%d-%b-%y") + ' 00:00')
       [date1, date2]
     end
 
@@ -135,8 +147,8 @@ class ChronicBetween
       cdate1, cdate2 = [d1,d2].map {|d| Chronic.parse(d)}
       n_days = ((cdate2 - cdate1) / 86400).to_i
       dates = 0.upto(n_days).map do |n|          
-        x = (cdate1.to_date + n).strftime("%d-%b-%y ")
-        datetime_range(x+t1, x+t2)
+        x = cdate1.to_datetime + n
+        datetime_range(x, t1, t2)
       end
     end            
     
@@ -147,7 +159,7 @@ class ChronicBetween
       n_days = ((cdate2 - cdate1) / 86400).to_i
       
       date1 = DateTime.parse(cdate1.strftime("%d-%b-%y") + ' 00:00')
-      [date1, date1 + n_days]
+      [date1, date1 + n_days + 1]
     end
 
     # e.g. April 5th
@@ -157,6 +169,7 @@ class ChronicBetween
       date1 = DateTime.parse(cdate1.strftime("%d-%b-%y") + ' 00:00')
       [date1, date1 + 1]
     end
+
   end
 
   def build(times)
@@ -169,14 +182,14 @@ class ChronicBetween
   def date_range_time_range(date, d1, d2, t1, t2)
     cdate2, n_days = latest_date_and_ndays(date, d1, d2)
     dates = (n_days).downto(0).map do |n|          
-      x = (cdate2.to_date - n).strftime("%d-%b-%y ")
-      datetime_range(x+t1, x+t2)
+      x = (cdate2.to_date - n)
+      datetime_range(x, t1, t2)
     end
   end
   
-  def date_with_time_range(date, d1, t1, t2)
-    x = Chronic.parse(d1, now: (date - 1)).strftime("%d-%b-%y ")
-    datetime_range(x+t1, x+t2)
+  def cdatetime_range(date, d1, t1, t2)
+    x = Chronic.parse(d1, now: (date - 1))
+    datetime_range(x, t1, t2)
   end  
   
   def latest_date_and_ndays(date, d1, d2)
@@ -187,11 +200,10 @@ class ChronicBetween
     [cdate2, n_days]
   end
   
-  def time_range(t1, t2)
-    [t1,t2].map {|t| DateTime.parse(t)}
+  def time_range(date, t1, t2)  
+    [t1,t2].map {|t| DateTime.parse(date.strftime("%d-%b-%y ") + t)}
   end
   
   alias datetime_range time_range
   
-
 end

@@ -51,3 +51,7 @@ Examples of parse-able strings:
 * 'April 2nd - April 5th 12:00-14:00'
 * 'April 5th - April 9th'
 * 'April 5th'
+* 'not before 6pm'
+* 'except after 6pm'
+* 'Sunday, after 6pm'
+* 'Saturday, not after 6pm'

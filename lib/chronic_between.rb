@@ -81,13 +81,13 @@ class ChronicBetween
     end
 
     # e.g. 3:45-5:15
-    get %r{^(\d[\w:]*)-(\d[\w:]*)(?=\s+(daily|every day))?} do
+    get %r{^(\d[\w:]*)-(\d[\w:]*)(?=\s*(daily|every day)?)} do
       t1, t2 = params[:captures]        
       time_range(date, t1, t2)
     end
     
     # e.g. 3:45 to 5:15
-    get %r{^(\d[\w:]*)\s+to\s+(\d[\w:]*)(?=\s+(daily|every day))?} do
+    get %r{^(\d[\w:]*)\s+to\s+(\d[\w:]*)(?=\s*(daily|every day)?)} do
       t1, t2 = params[:captures]        
       time_range(date, t1, t2)
     end    
@@ -193,7 +193,8 @@ class ChronicBetween
   end  
   
   def latest_date_and_ndays(date, d1, d2)
-    raw_date1, raw_date2 = [d1,d2].map {|d| Chronic.parse(d)}
+    raw_date1 = Chronic.parse(d1, :context => :past)
+    raw_date2 = Chronic.parse(d2, :now => raw_date1)
     cdate2 = Chronic.parse(d2, now: (date - 1))
     n_days = ((raw_date2 - raw_date1) / 86400).to_i
 

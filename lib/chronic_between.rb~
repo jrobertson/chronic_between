@@ -13,11 +13,13 @@ class ChronicBetween
   def initialize(x)    
     
     @times = x.is_a?(String) ? x.split(/[,;&]/).map(&:strip) : x
+    puts '@times : ' + @times.inspect
     @routes = {}; @params = {}
   end
     
-  def within?(date)
+  def within?(raw_date)
     
+    date = raw_date.respond_to? :to_datetime ? raw_date.to_datetime: raw_date
     dates = []
     
     ranges(@params, date)
@@ -27,7 +29,8 @@ class ChronicBetween
     closed_times.map!{|x| x[/^#{negatives}(.*)/,2]}
     
     dates = build times
-    inside_range = dates.detect {|d1, d2| date.between? d1, d2}    
+    puts 'dates : ' + dates.inspect
+    inside_range = dates.detect {|d1, d2| p [d1,d2]; date.between? d1, d2}    
     
     neg_dates = build closed_times
     inside_restrictions = neg_dates.detect {|d1, d2| date.between? d1, d2}
@@ -51,6 +54,7 @@ class ChronicBetween
     # e.g. Mon-Fri 9:00-16:30
     get %r{(\w+)-(\w+)\s+(\d[\w:]*)-(\d[\w:]*)$} do       
       d1, d2, t1, t2 = params[:captures]
+      puts 'fooo'
       date_range_time_range(date, d1 ,d2, t1, t2)
     end
     
@@ -174,6 +178,7 @@ class ChronicBetween
 
   def build(times)
     times.inject([]) do |result, x|
+      puts 'x: ' + x
       r = run_route(x.strip)
       r.first.is_a?(Array) ? result + r : result << r
     end
@@ -185,6 +190,7 @@ class ChronicBetween
       x = (cdate2.to_date - n)
       datetime_range(x, t1, t2)
     end
+    return dates
   end
   
   def cdatetime_range(date, d1, t1, t2)

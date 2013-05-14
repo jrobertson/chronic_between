@@ -13,7 +13,6 @@ class ChronicBetween
   def initialize(x)    
     
     @times = x.is_a?(String) ? x.split(/[,;&]/).map(&:strip) : x
-    puts '@times : ' + @times.inspect
     @routes = {}; @params = {}
   end
     
@@ -29,7 +28,6 @@ class ChronicBetween
     closed_times.map!{|x| x[/^#{negatives}(.*)/,2]}
     
     dates = build times
-    puts 'dates : ' + dates.inspect
     inside_range = dates.detect {|d1, d2| p [d1,d2]; date.between? d1, d2}    
     
     neg_dates = build closed_times
@@ -54,7 +52,6 @@ class ChronicBetween
     # e.g. Mon-Fri 9:00-16:30
     get %r{(\w+)-(\w+)\s+(\d[\w:]*)-(\d[\w:]*)$} do       
       d1, d2, t1, t2 = params[:captures]
-      puts 'fooo'
       date_range_time_range(date, d1 ,d2, t1, t2)
     end
     
@@ -178,7 +175,6 @@ class ChronicBetween
 
   def build(times)
     times.inject([]) do |result, x|
-      puts 'x: ' + x
       r = run_route(x.strip)
       r.first.is_a?(Array) ? result + r : result << r
     end

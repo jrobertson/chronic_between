@@ -13,7 +13,7 @@ class ChronicBetween
   def initialize(x)    
     
     @times = x.is_a?(String) ? x.split(/[,;&]/).map(&:strip) : x
-    @route = {}; @params = {}
+    @routes = {}; @params = {}
   end
     
   def within?(date)
@@ -193,7 +193,8 @@ class ChronicBetween
   end  
   
   def latest_date_and_ndays(date, d1, d2)
-    raw_date1, raw_date2 = [d1,d2].map {|d| Chronic.parse(d)}
+    raw_date1 = Chronic.parse(d1, :context => :past)
+    raw_date2 = Chronic.parse(d2, :now => raw_date1)
     cdate2 = Chronic.parse(d2, now: (date - 1))
     n_days = ((raw_date2 - raw_date1) / 86400).to_i
 

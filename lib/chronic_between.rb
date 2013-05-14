@@ -19,7 +19,7 @@ class ChronicBetween
     
   def within?(raw_date)
     
-    date = raw_date.respond_to? :to_datetime ? raw_date.to_datetime : raw_date
+    date = raw_date.respond_to?(:to_datetime) ? raw_date.to_datetime : raw_date
     dates = []
     
     ranges(@params, date)

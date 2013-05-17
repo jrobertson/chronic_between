@@ -6,7 +6,6 @@ require 'chronic'
 require 'date'
 require 'app-routes'
 
-
 class ChronicBetween
   include AppRoutes
   
@@ -19,6 +18,8 @@ class ChronicBetween
   def within?(raw_date)
     
     date = raw_date.respond_to?(:to_datetime) ? raw_date.to_datetime : raw_date
+    @timezone = date.strftime("%z")
+    @year = date.year
     dates = []
     
     ranges(@params, date)
@@ -145,7 +146,7 @@ class ChronicBetween
     # e.g. April 2nd - April 5th 12:00-14:00
     get %r{^(.*)\s+-\s+(.*)\s+(\d[\w:]*)-(\d[\w:]*)$} do                                                    
       d1, d2, t1, t2 = params[:captures]
-      cdate1, cdate2 = [d1,d2].map {|d| Chronic.parse(d)}
+      cdate1, cdate2 = [d1,d2].map {|d| Chronic.parse(d, :now => Time.local(@year))}
       n_days = ((cdate2 - cdate1) / 86400).to_i
       dates = 0.upto(n_days).map do |n|          
         x = cdate1.to_datetime + n
@@ -156,7 +157,7 @@ class ChronicBetween
     # e.g. April 5th - April 9th
     get %r{^(.*)\s+-\s+(.*)$} do                                                    
       d1, d2 = params[:captures]        
-      cdate1, cdate2 = [d1,d2].map {|d| Chronic.parse(d)}
+      cdate1, cdate2 = [d1,d2].map {|d| Chronic.parse(d, :now => Time.local(@year))}
       n_days = ((cdate2 - cdate1) / 86400).to_i
       
       date1 = DateTime.parse(cdate1.strftime("%d-%b-%y") + ' 00:00')
@@ -166,7 +167,7 @@ class ChronicBetween
     # e.g. April 5th
     get %r{^(.*)$} do
       day = params[:captures].first
-      cdate1 = Chronic.parse(day)
+      cdate1 = Chronic.parse(day, :now => Time.local(@year))
       date1 = DateTime.parse(cdate1.strftime("%d-%b-%y") + ' 00:00')
       [date1, date1 + 1]
     end
@@ -195,7 +196,7 @@ class ChronicBetween
   end  
   
   def latest_date_and_ndays(date, d1, d2)
-    raw_date1 = Chronic.parse(d1, :context => :past)
+    raw_date1 = Chronic.parse(d1, :context => :past,  :now => Time.local(@year))
     raw_date2 = Chronic.parse(d2, :now => raw_date1)
     cdate2 = Chronic.parse(d2, now: (date - 1))
     n_days = ((raw_date2 - raw_date1) / 86400).to_i
@@ -203,8 +204,8 @@ class ChronicBetween
     [cdate2, n_days]
   end
   
-  def time_range(date, t1, t2)  
-    [t1,t2].map {|t| DateTime.parse(date.strftime("%d-%b-%y ") + t)}
+  def time_range(date, t1, t2)
+    [t1,t2].map {|t| DateTime.parse(date.strftime("%d-%b-%y ") + t + @timezone )}
   end
   
   alias datetime_range time_range

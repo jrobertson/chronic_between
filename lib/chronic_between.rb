@@ -74,6 +74,11 @@ class ChronicBetween
       date_range_time_range(date, d1 ,d2, t1, t2)
     end        
 
+    get /today/i do
+      date1 = DateTime.parse(Time.now.strftime("%d-%b-%y") + ' 00:00')
+      [date1, date1 + 1]
+    end
+
     # e.g. Saturday
     get %r{^(\w+)$} do
       day = params[:captures].first

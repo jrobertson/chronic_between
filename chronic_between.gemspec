@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name = 'chronic_between'
-  s.version = '0.2.18'
+  s.version = '0.2.19'
   s.summary = 'chronic_between'
   s.files = Dir['lib/**/*.rb']
   s.authors = ['James Robertson']

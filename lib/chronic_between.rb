@@ -29,7 +29,7 @@ class ChronicBetween
     closed_times.map!{|x| x[/^#{negatives}(.*)/,2]}
     
     dates = build times
-    inside_range = dates.detect {|d1, d2| p [d1,d2]; date.between? d1, d2}    
+    inside_range = dates.detect {|d1, d2| date.between? d1, d2}    
     
     neg_dates = build closed_times
     inside_restrictions = neg_dates.detect {|d1, d2| date.between? d1, d2}

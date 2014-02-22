@@ -12,7 +12,7 @@ class ChronicBetween
   def initialize(x)    
     
     @times = x.is_a?(String) ? x.split(/[,;&]/).map(&:strip) : x
-    @routes = {}; @params = {}
+    super()
   end
     
   def within?(raw_date)

@@ -1,15 +1,15 @@
-= Chronic Between
+# Chronic Between
 
 A simple Ruby natural language parser for date and time ranges. (For example, Mon-Fri 09:00-16:30, etc.) Returns a boolean result. 
 
 Several date and time ranges can be supplied with matching patterns being separated by a comma.
 
-== Installation
+## Installation
 
     $ sudo gem sources -a http://gemcutter.org
     $ sudo gem install chronic_between
 
-== Usage
+## Usage
 
 
     >> s = 'Mon-Fri 9:00-16:30, Saturday, Sunday'
@@ -55,3 +55,4 @@ Examples of parse-able strings:
 * 'except after 6pm'
 * 'Sunday, after 6pm'
 * 'Saturday, not after 6pm'
+

@@ -88,7 +88,7 @@ class ChronicBetween
     end
 
     # e.g. 3:45-5:15
-    get %r{^(\d[\w:]*)-(\d[\w:]*)(?=\s*(daily|every day)?)} do
+    get %r{^(\d[\w:]*)\s*-\s*(\d[\w:]*)(?=\s*(daily|every day)?)} do
       t1, t2 = params[:captures]        
       time_range(date, t1, t2)
     end
@@ -100,7 +100,7 @@ class ChronicBetween
     end    
 
     # e.g. Mon 3:45-5:15
-    get %r{^(\w+)\s+(\d[\w:]*)-(\d[\w:]*)$} do                                                    
+    get %r{^(\w+)\s+(\d[\w:]*)\s*-\s*(\d[\w:]*)$} do                                                    
       d1, t1, t2 = params[:captures]        
       cdatetime_range(date, d1, t1, t2)
     end
@@ -112,7 +112,7 @@ class ChronicBetween
     end    
     
     # e.g. 3:45-5:15 Mon
-    get %r{^(\d[\w:]*)-(\d[\w:]*)\s+(\w+)$} do                                                    
+    get %r{^(\d[\w:]*)\s*-\s*(\d[\w:]*)\s+(\w+)$} do                                                    
       t1, t2, d1 = params[:captures]        
       cdatetime_range(date, d1, t1, t2)
     end
@@ -124,7 +124,7 @@ class ChronicBetween
     end        
 
     # e.g. Mon-Wed
-    get %r{^(\w+)-(\w+)$} do                                                    
+    get %r{^(\w+)\s*-\s*(\w+)$} do                                                    
       d1, d2 = params[:captures]        
       cdate2, n_days = latest_date_and_ndays(date, d1, d2)
       

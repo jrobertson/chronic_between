@@ -158,7 +158,8 @@ class ChronicBetween
       day = params[:captures].first
       cdate1 = Chronic.parse(day, :now => Time.local(@year))
       date1 = DateTime.parse(cdate1.strftime("%d-%b-%y") + ' 00:00')
-      [date1, date1 + 1]
+      date2 = DateTime.parse(cdate1.strftime("%d-%b-%y") + ' 23:59:59')
+      [date1, date2]
     end
 
   end

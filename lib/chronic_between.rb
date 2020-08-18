@@ -19,6 +19,7 @@ class ChronicBetween
     
     date = raw_date.respond_to?(:to_datetime) ? raw_date.to_datetime : raw_date
     @timezone = date.strftime("%z")
+    @params[:timezone] = @timezone
     @year = date.year
     dates = []
     
@@ -117,17 +118,17 @@ class ChronicBetween
     end
     
     # e.g. after 6pm
-    get %r{^after\s+(\d[\w:]*)$} do                                                    
+    get /^after\s+(\d[\w:]*)$/i do                                                    
       t1 = params[:captures].first
-      date1 = DateTime.parse(date.strftime("%d-%b-%y ") + t1)
+      date1 = DateTime.parse(date.strftime("%d-%b-%y ") + t1 + ' ' + params[:timezone])
       date2 = DateTime.parse((date + 1).strftime("%d-%b-%y ") + '00:00')      
       [date1, date2]
     end            
 
     # e.g. before 9pm
-    get %r{^before\s+(\d[\w:]*)$} do                                                    
+    get /^before\s+(\d[\w:]*)$/i do                                                    
       t1 = params[:captures].first
-      date2 = DateTime.parse(date.strftime("%d-%b-%y ") + t1)
+      date2 = DateTime.parse(date.strftime("%d-%b-%y ") + t1 + ' ' + params[:timezone])
       date1 = DateTime.parse(date.strftime("%d-%b-%y") + ' 00:00')
       [date1, date2]
     end

@@ -9,8 +9,9 @@ require 'app-routes'
 class ChronicBetween
   include AppRoutes
   
-  def initialize(x)    
+  def initialize(x, debug: false)    
     
+    @debug = debug
     @times = x.is_a?(String) ? x.split(/[,;&]/).map(&:strip) : x
     super()
   end
@@ -146,12 +147,15 @@ class ChronicBetween
     
     # e.g. April 5th - April 9th
     get %r{^(.*)\s+-\s+(.*)$} do                                                    
+      
+      puts 'route 600' if @debug
       d1, d2 = params[:captures]        
       cdate1, cdate2 = [d1,d2].map {|d| Chronic.parse(d, :now => Time.local(@year))}
       n_days = ((cdate2 - cdate1) / 86400).to_i
       
       date1 = DateTime.parse(cdate1.strftime("%d-%b-%y") + ' 00:00')
-      [date1, date1 + n_days + 1]
+      date2 = DateTime.parse(cdate1.strftime("%d-%b-%y") + ' 23:59:59')
+      [date1, date2 + n_days]
     end
 
     # e.g. April 5th
@@ -166,6 +170,7 @@ class ChronicBetween
   end
 
   def build(times)
+    
     times.inject([]) do |result, x|
       r = run_route(x.strip)
       r.first.is_a?(Array) ? result + r : result << r
